@@ -7,22 +7,54 @@ import testing.Interfaces.HolderObserver;
 import java.util.HashSet;
 import java.util.Set;
 
-public class SimplePublisher implements HolderChangePublisher { // класс менеджера наблюдений
+/**
+ * Реализация менеджера уведомлений для паттерна Observer.
+ * <p>
+ * Управляет подпиской и отпиской наблюдателей, а также рассылкой уведомлений
+ * об изменениях в модели {@link SimpleHolder}.
+ * </p>
+ *
+ * @author Daniil-Melnik
+ * @version 1.0
+ * @see HolderChangePublisher
+ * @see HolderObserver
+ */
+public class SimplePublisher implements HolderChangePublisher {
+    /** Множество зарегистрированных наблюдателей */
+    private Set<HolderObserver> observers = new HashSet<>();
 
-    Set<HolderObserver> observers = new HashSet<>(); // множество наблюдателей
-
+    /**
+     * Подписывает наблюдателя на уведомления об изменениях.
+     *
+     * @param observer наблюдатель, который будет подписан
+     */
     @Override
     public void subscribe(HolderObserver observer) {
         observers.add(observer);
-    } // подписать = добавить в множество наблюдателей
+    }
 
+    /**
+     * Отписывает наблюдателя от уведомлений об изменениях.
+     *
+     * @param observer наблюдатель, который будет отписан
+     */
     @Override
     public void unsubscribe(HolderObserver observer) {
         observers.remove(observer);
-    } // отписать - удалить из множества наблюдателей
+    }
 
+    /**
+     * Уведомляет всех подписанных наблюдателей об изменении состояния.
+     * <p>
+     * Для каждого наблюдателя вызывается метод {@link HolderObserver#update(Holder)}.
+     * </p>
+     *
+     * @param holder текущий экземпляр субъекта наблюдения (модель)
+     */
     @Override
-    public void notify(Holder holder) { // отправить уведомления
-        for (HolderObserver hO : observers) hO.update(holder); // вызов обновления для каждого наблюдателя из множества
+    public void notify(Holder holder) {
+        for (HolderObserver hO : observers) {
+            hO.update(holder);
+        }
     }
 }

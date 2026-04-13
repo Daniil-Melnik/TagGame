@@ -1,20 +1,41 @@
-// временное решение привести к Singleton - так как пока хранятся данные о поле. Позже будет введён класс-хранилище (или это будет зашито в команду)
-
 package testing.GameBackend.Implementations.Logic;
 
 import testing.Interfaces.Logic;
 
 import java.util.*;
 
+/**
+ * Реализация игровой логики для головоломки "Пятнашки".
+ * <p>
+ * Содержит правила выполнения ходов, проверку победы, перемешивание поля
+ * и валидацию состояния поля.
+ * </p>
+ *
+ * @author Daniil-Melnik
+ * @version 1.0
+ * @see Logic
+ */
 public class SimpleLogic implements Logic {
+    /** Эталонное состояние поля, соответствующее победе */
+    private static final List<String> winField = List.of("1", "2", "3", "4", "5", "6", "7", "8", "*");
 
-    private static final List<String> winField = List.of("1", "2", "3", "4", "5", "6", "7", "8", "*"); // выигрышное состояние поля
+    /**
+     * Отображение правил ходов.
+     * <p>
+     * Ключ - индекс пустой клетки, значение - множество индексов соседних клеток,
+     * которые могут быть перемещены на место пустоты.
+     * </p>
+     */
+    private static final HashMap<Integer, HashSet<String>> enabledPositions = new HashMap<>();
 
-    private static final HashMap<Integer, HashSet<String>> enabledPositions = new HashMap<>(); // отображение правил ходов
-    // индекс пустого места - множество разрешенных соседних индексов
-    // для занятия пустоты. Индексы в массиве поля.
-
-    public SimpleLogic(){ // заполнение отображения правил движения кнопок на пустое место
+    /**
+     * Конструктор, инициализирующий правила ходов.
+     * <p>
+     * Заполняет отображение enabledPositions правилами перемещения
+     * для игрового поля размером 3x3.
+     * </p>
+     */
+    public SimpleLogic() {
         enabledPositions.put(0, new HashSet<>(List.of("1", "3")));
         enabledPositions.put(1, new HashSet<>(List.of("0", "2", "4")));
         enabledPositions.put(2, new HashSet<>(List.of("1", "5")));
@@ -26,32 +47,60 @@ public class SimpleLogic implements Logic {
         enabledPositions.put(8, new HashSet<>(List.of("7", "5")));
     }
 
-
+    /**
+     * Выполняет ход, перемещая указанную клетку на место пустоты.
+     *
+     * @param btnPos       индекс нажатой клетки
+     * @param val          значение нажатой клетки (цифра)
+     * @param zeroPosition текущий индекс пустой клетки
+     * @param field        текущее состояние игрового поля
+     * @return обновленное состояние поля после хода (если ход возможен)
+     */
     @Override
-    public ArrayList<String> move(int btnPos, String val, int zeroPosition, ArrayList<String> field){ // выполнение хода по массиву поля
-        if (enabledPositions.get(zeroPosition).contains(btnPos + "")){ // если с нажатой кнопки можно пройти в пустоту
-            // новая позиция кнопки - старая позиция пустоты
-            field.set(zeroPosition, val); // в массиве поля на место * - цифру кнопки
-            field.set(btnPos, "*"); // в массиве поля на место цифры кнопки - *
+    public ArrayList<String> move(int btnPos, String val, int zeroPosition, ArrayList<String> field) {
+        if (enabledPositions.get(zeroPosition).contains(btnPos + "")) {
+            field.set(zeroPosition, val);
+            field.set(btnPos, "*");
         }
         return field;
     }
 
+    /**
+     * Создает новое случайное состояние игрового поля.
+     *
+     * @return случайно перемешанное поле
+     */
     @Override
-    public List<String> shuffleField(){ // перемешивание поля для случайной новой игры
+    public List<String> shuffleField() {
         List<String> field = new ArrayList<>(List.of("*", "1", "2", "3", "4", "5", "6", "7", "8"));
-        Collections.shuffle(field); // перетасовка массива поля
+        Collections.shuffle(field);
         return field;
     }
 
+    /**
+     * Проверяет, является ли текущее состояние поля выигрышным.
+     *
+     * @param field состояние игрового поля для проверки
+     * @return true, если поле соответствует эталону победы, иначе false
+     */
     @Override
-    public boolean isWin(List<String> field){
+    public boolean isWin(List<String> field) {
         return field.equals(winField);
-    } // проверка на победу
+    }
 
+    /**
+     * Проверяет корректность состояния поля.
+     * <p>
+     * Используется для защиты от чтения некорректных файлов.
+     * Проверяет, что поле содержит ровно по одному экземпляру каждого элемента
+     * из набора {*, 1, 2, 3, 4, 5, 6, 7, 8}.
+     * </p>
+     *
+     * @param testField состояние поля для проверки
+     * @return true, если поле содержит корректный набор элементов, иначе false
+     */
     @Override
-    public boolean isCorrectField(List<String> testField){ // проверка корректности полученного в массиве поля
-        // костыль - применяется для защиты от чтения не того файла
+    public boolean isCorrectField(List<String> testField) {
         List<String> correctSortedField = List.of("*", "1", "2", "3", "4", "5", "6", "7", "8");
         Collections.sort(testField);
         return testField.equals(correctSortedField);

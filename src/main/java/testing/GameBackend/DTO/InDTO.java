@@ -1,17 +1,32 @@
 package testing.GameBackend.DTO;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// класс, описывающий DTO для посылки в команду - два случая: выполнение хода / файловая операция
+/**
+ * Data Transfer Object (DTO) для передачи данных в команды контроллера.
+ * <p>
+ * Используется в двух сценариях:
+ * <ul>
+ *     <li>Выполнение хода - передаются position и value</li>
+ *     <li>Файловые операции - передается path</li>
+ * </ul>
+ * </p>
+ *
+ * @author Daniil-Melnik
+ * @version 1.0
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 public class InDTO {
-    private int position; // позиция кнопки (выполнение хода)
-    private String value; // значение кнопки (выполнение хода)
+    /** Позиция кнопки на игровом поле (используется при выполнении хода) */
+    private int position;
 
-    private String path; // путь (файловая операция)
+    /** Значение кнопки (цифра) на игровом поле (используется при выполнении хода) */
+    private String value;
+
+    /** Путь к файлу для операций сохранения/загрузки (используется при файловых операциях) */
+    private String path;
 }

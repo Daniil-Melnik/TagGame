@@ -8,22 +8,61 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 
-// класс, описывающий DTO описывающие состояние поля при фаловой загрузке/сохранении
-// Jackson - json - маппинг по геттерам
-// JAXB - xml - маппинг по аннотациям здесь
-
+/**
+ * Data Transfer Object (DTO) для сохранения и загрузки состояния игры.
+ * <p>
+ * Поддерживает сериализацию в форматы:
+ * <ul>
+ *     <li>JSON - через Jackson (маппинг по геттерам)</li>
+ *     <li>XML - через JAXB (маппинг по аннотациям)</li>
+ * </ul>
+ * </p>
+ *
+ * @author Daniil-Melnik
+ * @version 1.0
+ */
 @AllArgsConstructor
 @NoArgsConstructor
-@XmlRootElement
+@XmlRootElement(name = "gameSave")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SaveDTO {
+    /** Флаг, указывающий на то, что игра была выиграна на момент сохранения */
     private boolean win = false;
+
+    /** Текущее состояние игрового поля (массив из 9 элементов) */
     private ArrayList<String> field = null;
+
+    /** Индекс позиции пустой клетки (*) в массиве field */
     private int zeroPosition = 0;
 
-    public ArrayList<String> getField(){return new ArrayList<>(field);} // возврат копии в защиту от Jackson
+    /**
+     * Возвращает копию игрового поля.
+     * <p>
+     * Возврат копии обеспечивает защиту от нежелательных изменений со стороны
+     * библиотек маппинга (например, Jackson).
+     * </p>
+     *
+     * @return новый ArrayList, содержащий копию состояния поля
+     */
+    public ArrayList<String> getField() {
+        return new ArrayList<>(field);
+    }
 
-    public boolean getWin(){return win;}
+    /**
+     * Возвращает флаг выигрыша.
+     *
+     * @return true, если игра была выиграна, иначе false
+     */
+    public boolean getWin() {
+        return win;
+    }
 
-    public int getZeroPosition(){return zeroPosition; }
+    /**
+     * Возвращает позицию пустой клетки.
+     *
+     * @return индекс пустой клетки в массиве field
+     */
+    public int getZeroPosition() {
+        return zeroPosition;
+    }
 }

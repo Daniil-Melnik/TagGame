@@ -3,7 +3,6 @@ package testing.GameBackend.Implementations;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
 import testing.GameBackend.DTO.InDTO;
-
 import testing.GameBackend.DTO.SaveDTO;
 import testing.GameBackend.Implementations.Logic.SimpleLogic;
 import testing.GameBackend.Implementations.Strategy.JsonStrategy;
@@ -11,86 +10,163 @@ import testing.GameBackend.Implementations.Strategy.TextStrategy;
 import testing.GameBackend.Implementations.Strategy.XmlStrategy;
 import testing.Interfaces.*;
 
-
 import javax.swing.*;
-import java.io.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-// класс-реализация контроллера приложения
-
+/**
+ * Реализация контроллера приложения (паттерн MVC).
+ * <p>
+ * Координирует взаимодействие между моделью ({@link Holder}) и представлением.
+ * Реализует паттерны:
+ * <ul>
+ *     <li>State - управление состояниями игры (игра/победа)</li>
+ *     <li>Strategy - выбор стратегии сохранения/загрузки файлов</li>
+ * </ul>
+ * </p>
+ *
+ * @author Daniil-Melnik
+ * @version 1.0
+ * @see Controller
+ * @see State
+ */
 public class SimpleController implements Controller {
-    private final HashMap<String, FileStrategy> strategies = // стратегии работы с айлами трёх типов
-            new HashMap<>(Map.of(
-                    ".txt", new TextStrategy(),
-                    ".xml", new XmlStrategy(),
-                    ".json", new JsonStrategy()));
+    /**
+     * Карта стратегий работы с файлами.
+     * Ключ - расширение файла (.txt, .xml, .json), значение - соответствующая стратегия.
+     */
+    private final HashMap<String, FileStrategy> strategies = new HashMap<>(Map.of(
+            ".txt", new TextStrategy(),
+            ".xml", new XmlStrategy(),
+            ".json", new JsonStrategy()));
 
-    private Logic logic = null; // экземпляр логики
-    private Holder holder = null; // экземпляр модели
-    private FileStrategy strategy; // установленная стратегия работы с файлами
+    /** Экземпляр игровой логики */
+    private Logic logic = null;
+
+    /** Экземпляр модели (хранилище состояния игры) */
+    private Holder holder = null;
+
+    /** Текущая стратегия работы с файлами */
+    private FileStrategy strategy;
+
+    /** Текущее состояние игры (игра идет / победа) */
     @Setter
-    private State state; // усстановленное состояние: выигрыш/игра
+    private State state;
 
-    public SimpleController(Holder holder){ // конструктор
-        logic = new SimpleLogic(); // на месте
-        this.holder = holder; // извне
-        this.strategy = new TextStrategy(); // на месте
-        state = new WinState(); // на месте
+    /**
+     * Конструктор контроллера.
+     *
+     * @param holder экземпляр модели, передаваемый извне
+     */
+    public SimpleController(Holder holder) {
+        logic = new SimpleLogic();
+        this.holder = holder;
+        this.strategy = new TextStrategy();
+        state = new WinState();
     }
 
+    /**
+     * Выполняет ход в игре.
+     * <p>
+     * Делегирует выполнение текущему состоянию. После выполнения хода проверяет
+     * флаг победы и при необходимости переключает состояние на WinState.
+     * </p>
+     *
+     * @param inDTO DTO с параметрами хода (позиция и значение кнопки)
+     */
     @Override
-    public void makeMove(InDTO inDTO) { // метод выполнения хода
-        state.makeMove(inDTO); // делегирования обязанностей выполнения хода текущему состоянию (игра - ходим, победа - не ходим)
-        if (holder.isWin()) setState(new WinState()); // управление состоянием - установка в выигрышное
+    public void makeMove(InDTO inDTO) {
+        state.makeMove(inDTO);
+        if (holder.isWin()) setState(new WinState());
     }
 
+    /**
+     * Создает новую игру со случайным расположением клеток.
+     * <p>
+     * Генерирует случайное поле через логику, обновляет модель и
+     * переключает состояние в режим игры.
+     * </p>
+     */
     @Override
     public void createNewShuffleGame() {
-        ArrayList<String> newField = (ArrayList<String>) logic.shuffleField(); // создание случайного поля
-        holder.updateHolder(newField, -1, false); // обновление модели в соответствии с новым полем
-        setState(new GameState(holder, logic)); // управление состоянием - сброс в игровое
+        ArrayList<String> newField = (ArrayList<String>) logic.shuffleField();
+        holder.updateHolder(newField, -1, false);
+        setState(new GameState(holder, logic));
     }
 
+    /**
+     * Загружает игру из файла.
+     * <p>
+     * Автоматически определяет стратегию загрузки по расширению файла.
+     * Проверяет корректность загруженного поля перед обновлением модели.
+     * </p>
+     *
+     * @param inDTO DTO с путем к файлу
+     */
     @Override
-    public void createNewFileGame(InDTO inDTO) { // метод загрузки игры из файла
-        String path = inDTO.getPath(); // получение пути
-        strategy = strategies.get(path.substring(path.lastIndexOf('.'))); // определение стратегии работы с файлом
-                                                                              // по его расширению
-        ArrayList<String> newField = null;
-        try {
-            SaveDTO saveDTO = strategy.load(path); // выполнение загрузки по стратегии
-            newField = saveDTO.getField(); // получение загруженного поля
-            if (logic.isCorrectField(newField)) holder.updateHolder(saveDTO.getField(), saveDTO.getZeroPosition(), saveDTO.getWin());
-                // если поле корректное - обновление модели
-            else JOptionPane.showMessageDialog(null, "Некорректный файл", "Ошибка", JOptionPane.ERROR_MESSAGE);
-            setState(new GameState(holder, logic)); // управление состоянием - сброс в игровое
+    public void createNewFileGame(InDTO inDTO) {
+        String path = inDTO.getPath();
+        strategy = strategies.get(path.substring(path.lastIndexOf('.')));
 
+        try {
+            SaveDTO saveDTO = strategy.load(path);
+            ArrayList<String> newField = saveDTO.getField();
+            if (logic.isCorrectField(newField)) {
+                holder.updateHolder(saveDTO.getField(), saveDTO.getZeroPosition(), saveDTO.getWin());
+            } else {
+                JOptionPane.showMessageDialog(null, "Некорректный файл", "Ошибка", JOptionPane.ERROR_MESSAGE);
+            }
+            setState(new GameState(holder, logic));
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Файл исчез!", "Ошибка", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    /**
+     * Сохраняет текущее состояние игры в файл.
+     * <p>
+     * Автоматически определяет стратегию сохранения по расширению файла.
+     * </p>
+     *
+     * @param inDTO DTO с путем к файлу
+     */
     @Override
-    public void saveGameToFile(InDTO inDTO){ // метод сохранения игры в файл
-        String path = inDTO.getPath(); // получение пути
-        strategy = strategies.get(path.substring(path.lastIndexOf('.'))); // определение стратегии
-        ArrayList<String> field = (ArrayList<String>) holder.getField(); // получение поля из модели
+    public void saveGameToFile(InDTO inDTO) {
+        String path = inDTO.getPath();
+        strategy = strategies.get(path.substring(path.lastIndexOf('.')));
+        ArrayList<String> field = (ArrayList<String>) holder.getField();
+
         try {
-            strategy.save(new SaveDTO(holder.isWin(), field, holder.getZeroPosition()), path); // сохранение по стратегии
+            strategy.save(new SaveDTO(holder.isWin(), field, holder.getZeroPosition()), path);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, "Ошибка сохранения игры!", "Ошибка", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    /**
+     * Внутренний класс, описывающий состояние "Игра идет".
+     * <p>
+     * В этом состоянии разрешено выполнение ходов.
+     * Реализует паттерн State.
+     * </p>
+     */
     @AllArgsConstructor
-    private static class GameState implements State{ // внутренний класс, описывающий состояние "Игра идёт"
-        private Holder holder; // поля для "подмены" контроллера
+    private static class GameState implements State {
+        /** Модель игры */
+        private Holder holder;
+
+        /** Логика игры */
         private Logic logic;
 
+        /**
+         * Выполняет ход в состоянии активной игры.
+         *
+         * @param inDTO DTO с параметрами хода
+         */
         @Override
-        public void makeMove(InDTO inDTO) { // метод выполнения хода (ира идёт => можно ходить)
+        public void makeMove(InDTO inDTO) {
             int btnPos = inDTO.getPosition();
             String value = inDTO.getValue();
 
@@ -102,6 +178,13 @@ public class SimpleController implements Controller {
         }
     }
 
+    /**
+     * Внутренний класс, описывающий состояние "Выигрыш".
+     * <p>
+     * В этом состоянии запрещено выполнение ходов.
+     * Реализует паттерн State.
+     * </p>
+     */
     private static class WinState implements State{ // класс описывающий состояние "Выигрыш" - ходить нельзя
 
         @Override

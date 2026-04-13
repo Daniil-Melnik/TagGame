@@ -1,8 +1,41 @@
 package testing.Interfaces;
 
-// интерфейс опевещателя об изменениях в субъекте для реагирования наблюдателя
+/**
+ * Интерфейс оповещателя об изменениях в субъекте (паттерн "Наблюдатель").
+ * <p>
+ * Управляет подпиской и отпиской наблюдателей, а также рассылкой уведомлений
+ * об изменениях состояния модели.
+ * </p>
+ *
+ * @author Daniil-Melnik
+ * @version 1.0
+ * @see Holder
+ * @see HolderObserver
+ */
 public interface HolderChangePublisher {
-    void subscribe(HolderObserver observer); // метод для подписки на обновления
-    void unsubscribe(HolderObserver observer);// метод для отписки от обновлений
-    void notify(Holder holder); // метод для оповещения с передачей действующего экземпляра субъекта
+
+    /**
+     * Подписывает наблюдателя на уведомления об изменениях.
+     *
+     * @param observer наблюдатель, который будет получать уведомления
+     */
+    void subscribe(HolderObserver observer);
+
+    /**
+     * Отписывает наблюдателя от уведомлений об изменениях.
+     *
+     * @param observer наблюдатель, который больше не будет получать уведомления
+     */
+    void unsubscribe(HolderObserver observer);
+
+    /**
+     * Уведомляет всех подписанных наблюдателей об изменении состояния.
+     * <p>
+     * Вызывает метод {@link HolderObserver#update(Holder)} для каждого
+     * зарегистрированного наблюдателя.
+     * </p>
+     *
+     * @param holder текущий экземпляр субъекта наблюдения (модель)
+     */
+    void notify(Holder holder);
 }

@@ -10,17 +10,51 @@ import testing.Interfaces.HolderChangePublisher;
 
 import java.awt.*;
 
-// главный класс игры
+/**
+ * Главный класс игры "Пятнашки".
+ * <p>
+ * Точка входа в приложение. Отвечает за инициализацию всех компонентов
+ * в архитектуре MVC (Model-View-Controller):
+ * <ul>
+ *     <li>Model - {@link Holder} (SimpleHolder)</li>
+ *     <li>View - {@link MainFrame} (графический интерфейс)</li>
+ *     <li>Controller - {@link Controller} (SimpleController)</li>
+ * </ul>
+ * </p>
+ * <p>
+ * Также настраивает паттерн "Наблюдатель", подписывая представление
+ * на уведомления об изменениях модели.
+ * </p>
+ *
+ * @author Daniil-Melnik
+ * @version 1.0
+ */
 public class Main {
 
-    public static void main(String... args){
-        HolderChangePublisher publisher = new SimplePublisher(); // менеджер субъекта наблюдения
+    /**
+     * Точка входа в приложение.
+     * <p>
+     * Выполняет следующие шаги:
+     * <ol>
+     *     <li>Создает менеджер уведомлений (SimplePublisher)</li>
+     *     <li>Создает модель игры (SimpleHolder)</li>
+     *     <li>Создает контроллер (SimpleController)</li>
+     *     <li>Создает главное окно (MainFrame)</li>
+     *     <li>Подписывает главное окно на уведомления модели</li>
+     *     <li>Запускает графический интерфейс в потоке обработки событий AWT</li>
+     * </ol>
+     * </p>
+     *
+     * @param args аргументы командной строки (не используются)
+     */
+    public static void main(String... args) {
+        HolderChangePublisher publisher = new SimplePublisher();
 
-        Holder holder = new SimpleHolder(publisher); // формирование тройки MVC
+        Holder holder = new SimpleHolder(publisher);
         Controller controller = new SimpleController(holder);
         MainFrame mainFrame = new MainFrame(controller, holder);
 
-        publisher.subscribe(mainFrame); // подписка главного окна на наблюдение
+        publisher.subscribe(mainFrame);
 
         EventQueue.invokeLater(() -> {
             mainFrame.setVisible(true);
