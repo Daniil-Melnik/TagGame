@@ -63,6 +63,8 @@
 <p></p>
 <p>Выдача сообщения в случае некорректного файла</p>
 <img src="https://github.com/user-attachments/assets/68cdc370-9539-499f-b533-c9a0f8bb10f8">
-<p></p>
+<p>Выигрыш</p>
+<img src="https://github.com/user-attachments/assets/eca79297-37e1-489d-854f-5303d642ef71" />
+
 
 
